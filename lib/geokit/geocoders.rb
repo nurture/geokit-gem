@@ -312,13 +312,13 @@ module Geokit
           geoloc.provider='yahoo'  
 
           #extended - false if not available
-          geoloc.city=result.elements['city'].text if result.elements['city'] && result.elements['city'].text != nil
-          geoloc.state=result.elements['statecode'].text if result.elements['statecode'] && result.elements['statecode'].text != nil
-          geoloc.zip=result.elements['postal'].text if result.elements['postal'] && result.elements['postal'].text != nil
+          geoloc.city=result.elements['city'].text if result.elements['city']
+          geoloc.state=result.elements['statecode'].text if result.elements['statecode']
+          geoloc.zip=result.elements['postal'].text if result.elements['postal']
           geoloc.street_address="#{result.elements['house'].text} #{result.elements['street'].text}".squeeze(" ") if result.elements['street'] && result.elements['street'].text != nil
           geoloc.full_address = "#{result.elements['line1'].text}, #{result.elements['line2'].text}".squeeze(" ") if result.elements['line2'] && result.elements['line2'].text != nil && result.elements['line1'] && result.elements['line1'].text != nil
 
-          geoloc.accuracy=doc.elements['//Quality'].text
+          geoloc.accuracy=result.elements['quality'].text
           geoloc.success=true
           return geoloc
         else 
