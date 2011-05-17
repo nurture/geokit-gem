@@ -297,29 +297,20 @@ module Geokit
         url="http://where.yahooapis.com/geocode?appid=#{Geokit::Geocoders::yahoo}&location=#{Geokit::Inflector::url_escape(address_str)}"
         result = self.call_geocoder_service(url)
         return GeoLoc.new if !result.is_a?(Net::HTTPSuccess)
+        geoloc = nil
         xml = result.body
         doc = REXML::Document.new(xml)
         logger.debug "Yahoo geocoding. Address: #{address}. Result: #{xml}"
 
         if doc.elements['//ResultSet']
-          geoloc = GeoLoc.new
-          result = doc.elements['//Result']
-
-          #basic      
-          geoloc.lat=result.elements['latitude'].text
-          geoloc.lng=result.elements['longitude'].text
-          geoloc.country_code=result.elements['countrycode'].text
-          geoloc.provider='yahoo'  
-
-          #extended - false if not available
-          geoloc.city=result.elements['city'].text if result.elements['city']
-          geoloc.state=result.elements['statecode'].text if result.elements['statecode']
-          geoloc.zip=result.elements['postal'].text if result.elements['postal']
-          geoloc.street_address="#{result.elements['house'].text} #{result.elements['street'].text}".squeeze(" ") if result.elements['street'] && result.elements['street'].text != nil
-          geoloc.full_address = "#{result.elements['line1'].text}, #{result.elements['line2'].text}".squeeze(" ") if result.elements['line2'] && result.elements['line2'].text != nil && result.elements['line1'] && result.elements['line1'].text != nil
-
-          geoloc.accuracy=result.elements['quality'].text
-          geoloc.success=true
+          doc.each_element('//Result') do |element|
+            extracted_geoloc = extract_result(element)
+            if geoloc.nil?
+              geoloc = extracted_geoloc
+            else
+              geoloc.all.push(extracted_geoloc)
+            end
+          end
           return geoloc
         else 
           logger.info "Yahoo was unable to geocode address: "+address
@@ -329,6 +320,28 @@ module Geokit
         rescue 
           logger.info "Caught an error during Yahoo geocoding call: "+$!
           return GeoLoc.new
+      end
+
+      def self.extract_result(doc)
+        geoloc = GeoLoc.new
+        result = doc.elements['//Result']
+
+        #basic      
+        geoloc.lat=result.elements['latitude'].text
+        geoloc.lng=result.elements['longitude'].text
+        geoloc.country_code=result.elements['countrycode'].text
+        geoloc.provider='yahoo'  
+
+        #extended - false if not available
+        geoloc.city=result.elements['city'].text if result.elements['city']
+        geoloc.state=result.elements['statecode'].text if result.elements['statecode']
+        geoloc.zip=result.elements['postal'].text if result.elements['postal']
+        geoloc.street_address="#{result.elements['house'].text} #{result.elements['street'].text}".squeeze(" ") if result.elements['street'] && result.elements['street'].text != nil
+        geoloc.full_address = "#{result.elements['line1'].text}, #{result.elements['line2'].text}".squeeze(" ") if result.elements['line2'] && result.elements['line2'].text != nil && result.elements['line1'] && result.elements['line1'].text != nil
+
+        geoloc.accuracy=result.elements['quality'].text
+        geoloc.success=true
+        return geoloc
       end
     end
 
