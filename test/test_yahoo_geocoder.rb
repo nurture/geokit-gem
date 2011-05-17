@@ -4,15 +4,15 @@ Geokit::Geocoders::yahoo = 'Yahoo'
 
 class YahooGeocoderTest < BaseGeocoderTest #:nodoc: all
     YAHOO_FULL=<<-EOF.strip
-  <?xml version="1.0"?>
-  <ResultSet xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:yahoo:maps" xsi:schemaLocation="urn:yahoo:maps http://api.local.yahoo.com/MapsService/V1/GeocodeResponse.xsd"><Result precision="address"><Latitude>37.792406</Latitude><Longitude>-122.39411</Longitude><Address>100 SPEAR ST</Address><City>SAN FRANCISCO</City><State>CA</State><Zip>94105-1522</Zip><Country>US</Country></Result></ResultSet>
-  <!-- ws01.search.scd.yahoo.com uncompressed/chunked Mon Jan 29 16:23:43 PST 2007 -->
+<?xml version="1.0" encoding="UTF-8"?>
+<ResultSet version="1.0"><Error>0</Error><ErrorMessage>No error</ErrorMessage><Locale>us_US</Locale><Quality>87</Quality><Found>1</Found><Result><quality>87</quality><latitude>37.792418</latitude><longitude>-122.393913</longitude><offsetlat>37.792332</offsetlat><offsetlon>-122.394027</offsetlon><radius>500</radius><name></name><line1>100 Spear St</line1><line2>San Francisco, CA  94105-1578</line2><line3></line3><line4>United States</line4><house>100</house><street>Spear St</street><xstreet></xstreet><unittype></unittype><unit></unit><postal>94105-1578</postal><neighborhood></neighborhood><city>San Francisco</city><county>San Francisco County</county><state>California</state><country>United States</country><countrycode>US</countrycode><statecode>CA</statecode><countycode></countycode><uzip>94105</uzip><hash>0FA06819B5F53E75</hash><woeid>12797156</woeid><woetype>11</woetype></Result></ResultSet>
+<!-- gws14.maps.ch1.yahoo.com uncompressed/chunked Tue May 17 05:35:35 PDT 2011 -->
     EOF
 
     YAHOO_CITY=<<-EOF.strip
-  <?xml version="1.0"?>
-  <ResultSet xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:yahoo:maps" xsi:schemaLocation="urn:yahoo:maps http://api.local.yahoo.com/MapsService/V1/GeocodeResponse.xsd"><Result precision="city"><Latitude>37.7742</Latitude><Longitude>-122.417068</Longitude><Address></Address><City>SAN FRANCISCO</City><State>CA</State><Zip></Zip><Country>US</Country></Result></ResultSet>
-  <!-- ws02.search.scd.yahoo.com uncompressed/chunked Mon Jan 29 18:00:28 PST 2007 -->
+    <?xml version="1.0" encoding="UTF-8"?>
+<ResultSet version="1.0"><Error>0</Error><ErrorMessage>No error</ErrorMessage><Locale>us_US</Locale><Quality>40</Quality><Found>1</Found><Result><quality>40</quality><latitude>37.777125</latitude><longitude>-122.419644</longitude><offsetlat>37.777125</offsetlat><offsetlon>-122.419644</offsetlon><radius>10700</radius><name></name><line1></line1><line2>San Francisco, CA</line2><line3></line3><line4>United States</line4><house></house><street></street><xstreet></xstreet><unittype></unittype><unit></unit><postal></postal><neighborhood></neighborhood><city>San Francisco</city><county>San Francisco County</county><state>California</state><country>United States</country><countrycode>US</countrycode><statecode>CA</statecode><countycode></countycode><uzip>94102</uzip><hash></hash><woeid>2487956</woeid><woetype>7</woetype></Result></ResultSet>
+<!-- gws14.maps.ch1.yahoo.com uncompressed/chunked Tue May 17 05:33:47 PDT 2011 -->
     EOF
     
   def setup
@@ -21,7 +21,7 @@ class YahooGeocoderTest < BaseGeocoderTest #:nodoc: all
     @yahoo_city_hash = {:city=>"San Francisco", :state=>"CA"}
     @yahoo_full_loc = Geokit::GeoLoc.new(@yahoo_full_hash)
     @yahoo_city_loc = Geokit::GeoLoc.new(@yahoo_city_hash)
-    @api_url = 'http://api.local.yahoo.com/MapsService/V1/geocode'
+    @api_url = 'http://where.yahooapis.com/geocode'
   end
   
   # the testing methods themselves
@@ -39,7 +39,7 @@ class YahooGeocoderTest < BaseGeocoderTest #:nodoc: all
     url = "#{@api_url}?appid=Yahoo&location=#{Geokit::Inflector.url_escape(@address)}"
     Geokit::Geocoders::YahooGeocoder.expects(:call_geocoder_service).with(url).returns(response)
     res = Geokit::Geocoders::YahooGeocoder.geocode(@address)
-    assert_equal 8, res.accuracy
+    assert_equal 87, res.accuracy.to_i
   end
   
   def test_yahoo_full_address_with_geo_loc
@@ -64,7 +64,7 @@ class YahooGeocoderTest < BaseGeocoderTest #:nodoc: all
     url = "#{@api_url}?appid=Yahoo&location=#{Geokit::Inflector.url_escape(@address)}"
     Geokit::Geocoders::YahooGeocoder.expects(:call_geocoder_service).with(url).returns(response)
     res = Geokit::Geocoders::YahooGeocoder.geocode(@address)
-    assert_equal 4, res.accuracy
+    assert_equal 40, res.accuracy.to_i
   end
   
   def test_yahoo_city_with_geo_loc
@@ -88,16 +88,16 @@ class YahooGeocoderTest < BaseGeocoderTest #:nodoc: all
   def do_full_address_assertions(res)
     assert_equal "CA", res.state
     assert_equal "San Francisco", res.city
-    assert_equal "37.792406,-122.39411", res.ll
+    assert_equal "37.792418,-122.393913", res.ll
     assert res.is_us?
-    assert_equal "100 Spear St, San Francisco, CA, 94105-1522, US", res.full_address
+    assert_equal "100 Spear St, San Francisco, CA 94105-1578", res.full_address
     assert_equal "yahoo", res.provider
   end
   
   def do_city_assertions(res)
     assert_equal "CA", res.state
     assert_equal "San Francisco", res.city 
-    assert_equal "37.7742,-122.417068", res.ll
+    assert_equal "37.777125,-122.419644", res.ll
     assert res.is_us?
     assert_equal "San Francisco, CA, US", res.full_address 
     assert_nil res.street_address
