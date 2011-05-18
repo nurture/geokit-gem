@@ -81,6 +81,30 @@ class YahooGeocoderTest < BaseGeocoderTest #:nodoc: all
     assert result.success?
     assert_equal 7, result.all.size
   end
+  
+  def test_no_results
+    address = 'fkurgierge'
+    response = MockSuccess.new
+    response.expects(:body).returns(no_results_xml)
+    url = url_for(address)
+    Geokit::Geocoders::YahooGeocoder.expects(:call_geocoder_service).with(url).returns(response)
+    result = Geokit::Geocoders::YahooGeocoder.geocode(address)
+
+    assert result.is_a?(Geokit::GeoLoc)
+    assert !result.success?
+  end
+
+  def test_error_no_query
+    address = ''
+    response = MockSuccess.new
+    response.expects(:body).returns(no_query_xml)
+    url = url_for(address)
+    Geokit::Geocoders::YahooGeocoder.expects(:call_geocoder_service).with(url).returns(response)
+    result = Geokit::Geocoders::YahooGeocoder.geocode(address)
+
+    assert result.is_a?(Geokit::GeoLoc)
+    assert !result.success?
+  end
 
   private
 
@@ -122,6 +146,22 @@ class YahooGeocoderTest < BaseGeocoderTest #:nodoc: all
 <ResultSet version="1.0"><Error>0</Error><ErrorMessage>No error</ErrorMessage><Locale>us_US</Locale><Quality>40</Quality><Found>1</Found><Result><quality>40</quality><latitude>37.777125</latitude><longitude>-122.419644</longitude><offsetlat>37.777125</offsetlat><offsetlon>-122.419644</offsetlon><radius>10700</radius><name></name><line1></line1><line2>San Francisco, CA</line2><line3></line3><line4>United States</line4><house></house><street></street><xstreet></xstreet><unittype></unittype><unit></unit><postal></postal><neighborhood></neighborhood><city>San Francisco</city><county>San Francisco County</county><state>California</state><country>United States</country><countrycode>US</countrycode><statecode>CA</statecode><countycode></countycode><uzip>94102</uzip><hash></hash><woeid>2487956</woeid><woetype>7</woetype></Result></ResultSet>
 <!-- gws14.maps.ch1.yahoo.com uncompressed/chunked Tue May 17 05:33:47 PDT 2011 -->
     ).strip
+  end
+
+  def no_results_xml
+    %(
+    <?xml version="1.0" encoding="UTF-8"?>
+<ResultSet version="1.0"><Error>0</Error><ErrorMessage>No error</ErrorMessage><Locale>us_US</Locale><Quality>10</Quality><Found>0</Found></ResultSet>
+<!-- gws14.maps.ch1.yahoo.com uncompressed/chunked Wed May 18 01:43:01 PDT 2011 -->
+    ).strip
+  end
+
+  def no_query_xml
+    %(
+      <?xml version="1.0" encoding="UTF-8"?>
+<ResultSet version="1.0"><Error>100</Error><ErrorMessage>No location parameters</ErrorMessage><Locale>us_US</Locale><Quality>0</Quality><Found>0</Found></ResultSet>
+<!-- gws13.maps.ch1.yahoo.com uncompressed/chunked Wed May 18 01:52:46 PDT 2011 -->
+    )
   end
 
   def multiple_results_xml

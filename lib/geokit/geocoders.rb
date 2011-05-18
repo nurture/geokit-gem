@@ -294,7 +294,7 @@ module Geokit
       # Template method which does the geocode lookup.
       def self.do_geocode(address, options = {})
         address_str = address.is_a?(GeoLoc) ? address.to_geocodeable_s : address
-        url="http://where.yahooapis.com/geocode?appid=#{Geokit::Geocoders::yahoo}&location=#{Geokit::Inflector::url_escape(address_str)}"
+        url = "http://where.yahooapis.com/geocode?appid=#{Geokit::Geocoders::yahoo}&location=#{Geokit::Inflector::url_escape(address_str)}"
         result = self.call_geocoder_service(url)
         return GeoLoc.new if !result.is_a?(Net::HTTPSuccess)
         geoloc = nil
@@ -327,20 +327,20 @@ module Geokit
         result = doc.elements['//Result']
 
         #basic      
-        geoloc.lat=result.elements['latitude'].text
-        geoloc.lng=result.elements['longitude'].text
-        geoloc.country_code=result.elements['countrycode'].text
-        geoloc.provider='yahoo'  
+        geoloc.lat = result.elements['latitude'].text
+        geoloc.lng = result.elements['longitude'].text
+        geoloc.country_code = result.elements['countrycode'].text
+        geoloc.provider = 'yahoo'  
 
         #extended - false if not available
-        geoloc.city=result.elements['city'].text if result.elements['city']
-        geoloc.state=result.elements['statecode'].text if result.elements['statecode']
-        geoloc.zip=result.elements['postal'].text if result.elements['postal']
-        geoloc.street_address="#{result.elements['house'].text} #{result.elements['street'].text}".squeeze(" ") if result.elements['street'] && result.elements['street'].text != nil
+        geoloc.city = result.elements['city'].text if result.elements['city']
+        geoloc.state = result.elements['statecode'].text if result.elements['statecode']
+        geoloc.zip = result.elements['postal'].text if result.elements['postal']
+        geoloc.street_address = "#{result.elements['house'].text} #{result.elements['street'].text}".squeeze(" ") if result.elements['street'] && result.elements['street'].text != nil
         geoloc.full_address = "#{result.elements['line1'].text}, #{result.elements['line2'].text}".squeeze(" ") if result.elements['line2'] && result.elements['line2'].text != nil && result.elements['line1'] && result.elements['line1'].text != nil
 
-        geoloc.accuracy=result.elements['quality'].text
-        geoloc.success=true
+        geoloc.accuracy = result.elements['quality'].text
+        geoloc.success = true
         return geoloc
       end
     end
